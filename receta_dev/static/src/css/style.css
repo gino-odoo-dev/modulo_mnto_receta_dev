@@ -1,0 +1,54 @@
+html {
+    font-size: 8px; 
+}
+
+body {
+    font-size: 0.85rem;
+}
+
+
+/* .o_cp_searchview {
+    display: none !important;
+} */
+
+.text-warning {
+    display: none !important;
+}
+
+.fa {
+    display: none !important;
+}
+
+.fw-bold {
+    font-size: 0.85rem;
+    color: #111827 !important;
+    font-weight: normal !important;
+} 
+
+.o_form_view .min-w-0 {
+    display: none !important;
+}
+
+.o-mail-MessagingMenu-counter {
+    display: none !important;
+}
+
+.o-mail-DiscussSystray-class {
+    display: none !important;
+}
+
+.btn.btn-outline-primary.o_form_button_create {
+    display: none !important;
+}
+
+.o_cp_pager {
+    display: none !important;
+}
+
+.o_menu_brand {
+    font-size: 0.85rem !important;
+}
+
+.o_menu_sections {
+    font-size: 0.85rem !important;
+}

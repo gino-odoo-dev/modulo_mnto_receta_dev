@@ -1,0 +1,288 @@
+receta_dev/
+├── __init__.py
+├── __manifest__.py
+│
+└── models/
+    ├── __init__.py
+    └── receta.py
+    └── articulo.py
+    └── campliado.py
+    └── cantidad.py
+    └── codigosec.py
+    └── compmanu.py
+    └── componente.py
+    └── cunitario.py
+    └── depto.py
+    └── descripcion.py
+    └── temporadas.py
+    └── umedida.py
+    └── unimedida.py
+├── views/
+│   └── receta_model_views.xml
+│
+├── security/
+│   └── ir.model.access.csv
+│
+├── tests/
+│   └── test_receta.py/
+│
+└── static/
+    └── src/
+        └── css/
+            └── styles.css
+
+
+modelo 
+
+
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+
+class RecetaFicha(models.Model):
+    _name = 'receta.ficha'
+    _description = 'Receta ficha tecnica'
+    _rec_name = 'nombre_receta'
+    _order = 'sequence asc, id asc'
+
+    articulos_id = fields.Many2one('cl.product.articulo', string='Articulo', readonly=False)
+    articulo_name = fields.Char(string='Nombre de Articulo', compute='_compute_articulo_name', store=True)
+    temporadas_id = fields.Many2one('cl.product.temporada', string='Temporada', readonly=False)
+    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
+    descripcion = fields.Text(string='Descripcion', related='componente_id.descripcion', store=False, readonly=True)
+    codigosec_id = fields.Many2one('codigosec.model', string='codigo', readonly=False)
+    componente_id = fields.Many2one('componente.model', string='Componente', readonly=False)
+    umedida = fields.Char(string='Umedida', related='componente_id.um', store=False, readonly=True)
+    depto_id = fields.Many2one('depto.model', string='Departamento', readonly=False)
+    codigodepto = fields.Char(string='Codigo Departamento', related='depto_id.codigo', store=False, readonly=True)
+    descripciondepto = fields.Text(string='Descripcion Departamento', related='depto_id.descripcion', store=False, readonly=True)
+    comp_manu_id = fields.Many2one('compmanu.model', string='CM', readonly=False)
+    fact_perdida_id = fields.Float(string='Factor de Perdida (%)', readonly=False)
+    cantidad_id = fields.Integer(string='Cantidad', readonly=False)
+    c_unitario_id = fields.Float(string='Costo Unitario', readonly=False)
+    c_ampliado_id = fields.Float(string='Costo Ampliado', compute='calcular_costo_ampliado', store=True, readonly=True, widget="integer")
+    nombre_receta = fields.Char(string='Nombre de la receta', compute='_compute_nombre_receta', store=True, readonly=True)
+    copiaficha = fields.Many2one('copiaficha.model', string='Copia Ficha', readonly=False)
+    sequence = fields.Integer(string="Secuencia", default=10)
+
+    @api.depends('articulos_id', 'temporadas_id')
+    def _compute_nombre_receta(self):
+        for record in self:
+            articulo_nombre = record.articulos_id.name if record.articulos_id else "Sin Nombre"
+            temporada_nombre = record.temporadas_id.name if record.temporadas_id else "Sin Temporada"
+            record.nombre_receta = f"Articulo: {articulo_nombre} \u00A0\u00A0\u00A0\u00A0\u00A0 Temporada: {temporada_nombre}"
+
+    @api.depends('temporadas_id')
+    def _compute_temporada_name(self):
+        for record in self:
+            record.temporada_name = getattr(record.temporadas_id, 'name', "Sin Temporada")
+
+    @api.depends('articulos_id')
+    def _compute_articulo_name(self):
+        for record in self:
+            record.articulo_name = getattr(record.articulos_id, 'name', "Sin Nombre")
+
+
+    @api.depends('componente_id')
+    def _compute_componente_name(self):
+        for record in self:
+            record.componente_name = getattr(record.componentes_id, 'codigo', "Sin Nombre")
+
+
+    def name_get(self):
+        result = []
+        for record in self:
+            if self.env.context.get('form_view'):
+                nombre = record.nombre_receta if record.nombre_receta else "Articulo: Sin Nombre"
+                result.append((record.id, nombre))
+        return result
+
+    state = fields.Selection([
+        ('draft', 'Borrador'),
+        ('next', 'Siguiente')
+    ], default='draft', string="Estado")
+
+    def next_button(self):
+        self.ensure_one()
+        self.state = 'next'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'receta.ficha',
+            'view_mode': 'tree,form',
+            'target': 'current',
+            'context': {
+                'default_articulos_id': self.articulos_id.id,
+                'search_default_articulos_id': self.articulos_id.id,
+            },
+            'domain': [('articulos_id', '=', self.articulos_id.id)],
+        }
+
+    @api.depends('cantidad_id', 'fact_perdida_id', 'c_unitario_id')
+    def calcular_costo_ampliado(self):
+        for record in self:
+            if record.cantidad_id and record.fact_perdida_id and record.c_unitario_id:
+                if record.fact_perdida_id > 0:
+                    cantidad_perdida = (record.cantidad_id * record.fact_perdida_id) / 100
+                    record.c_ampliado_id = int(round(cantidad_perdida * record.c_unitario_id))
+                else:
+                    record.c_ampliado_id = 0
+            else:
+                record.c_ampliado_id = 0
+
+    @api.onchange('componente_id')
+    def _onchange_componente_id(self):
+        if self.componente_id:
+            self.descripcion = self.componente_id.descripcion or ''
+            self.umedida = self.componente_id.um or ''
+        else:
+            self.descripcion = ''
+            self.umedida = ''
+
+
+vista 
+
+
+<odoo>
+    <record id="view_receta_form" model="ir.ui.view">
+        <field name="name">receta.form</field>
+        <field name="model">receta.ficha</field> 
+        <field name="arch" type="xml">
+            <form string="Mnto Ficha Tecnica">
+                <sheet>
+                    <group>
+                        <field name="temporadas_id" style="width: 30%;"/>
+                        <field name="articulos_id" style="width: 30%;"/>
+                    </group>
+                    <header>
+                        <button name="next_button" string="Siguiente" type="object" class="oe_highlight" context="{'create': False}"/>
+                    </header>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_receta_tree" model="ir.ui.view">
+        <field name="name">receta.tree</field>
+        <field name="model">receta.ficha</field> 
+        <field name="arch" type="xml">
+            <tree string="Mnto Ficha Tecnica" editable="bottom">
+                <field name="codigosec_id" widget="many2one" class="codigo-field"/>
+                <field name="componente_id" widget="many2one"/>
+                <field name="descripcion" string="Descripcion" readonly="1"/>
+                <field name="umedida" string="Umedida" readonly="1"/>
+                <field name="comp_manu_id" widget="many2one"/>
+                <field name="cantidad_id"/>
+                <field name="fact_perdida_id" widget="percentage"/>
+                <field name="c_unitario_id"/>
+                <field name="c_ampliado_id" widget="monetary"/>
+                <field name="depto_id" widget="many2one"/> 
+                <button name="unlink" string="Eliminar" type="object" icon="fa-trash" confirm="¿Estas seguro de eliminar el registro de la ficha tecnica?"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_receta" model="ir.actions.act_window">
+        <field name="name">Mnto Ficha Tecnica</field>
+        <field name="res_model">receta.ficha</field>
+        <field name="view_mode">form,tree</field>
+        <field name="view_id" ref="view_receta_form"/>
+    </record>
+
+    <menuitem id="menu_receta" name="Mnto Ficha Tecnica" sequence="10" groups="base.group_user"/>
+    <menuitem id="submenu_receta" name="Volver" parent="menu_receta" action="action_receta"/>
+</odoo>
+
+security 
+
+
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_receta_user,access_receta_user,model_receta,base.group_user,1,1,1,1
+access_cl_product_articulo_user,access_cl_product_articulo_user,model_cl_product_articulo,base.group_user,1,1,1,1
+access_cl_product_temporada_user,access_cl_product_temporada_user,model_cl_product_temporada,base.group_user,1,1,1,1
+access_codigosec_model_user,access_codigosec_model_user,model_codigosec_model,base.group_user,1,1,1,1
+access_componente_model_user,access_componente_model_user,model_componente_model,base.group_user,1,1,1,1
+access_depto_model_user,access_depto_model_user,model_depto_model,base.group_user,1,1,1,1
+access_compmanu_model_user,access_compmanu_model_user,model_compmanu_model,base.group_user,1,1,1,1
+access_copiaficha_model_user,access_copiaficha_model_user,model_copiaficha_model,base.group_user,1,1,1,1
+access_receta_ficha,access_receta_ficha,model_receta_ficha,,1,1,1,1
+
+
+
+error 
+
+
+RPC_ERROR
+Odoo Server Error
+Traceback (most recent call last):
+  File "/odoo/odoo-server/odoo/http.py", line 1770, in _serve_db
+    return service_model.retrying(self._serve_ir_http, self.env)
+  File "/odoo/odoo-server/odoo/service/model.py", line 133, in retrying
+    result = func()
+  File "/odoo/odoo-server/odoo/http.py", line 1797, in _serve_ir_http
+    response = self.dispatcher.dispatch(rule.endpoint, args)
+  File "/odoo/odoo-server/odoo/http.py", line 2001, in dispatch
+    result = self.request.registry['ir.http']._dispatch(endpoint)
+  File "/odoo/enterprise/addons/website/models/ir_http.py", line 235, in _dispatch
+    response = super()._dispatch(endpoint)
+  File "/odoo/odoo-server/odoo/addons/base/models/ir_http.py", line 222, in _dispatch
+    result = endpoint(**request.params)
+  File "/odoo/odoo-server/odoo/http.py", line 725, in route_wrapper
+    result = endpoint(self, *args, **params_ok)
+  File "/odoo/enterprise/addons/web/controllers/dataset.py", line 28, in call_button
+    action = self._call_kw(model, method, args, kwargs)
+  File "/odoo/enterprise/addons/web/controllers/dataset.py", line 20, in _call_kw
+    return call_kw(request.env[model], method, args, kwargs)
+  File "/odoo/odoo-server/odoo/api.py", line 468, in call_kw
+    result = _call_kw_multi(method, model, args, kwargs)
+  File "/odoo/odoo-server/odoo/api.py", line 453, in _call_kw_multi
+    result = method(recs, *args, **kwargs)
+  File "<decorator-gen-77>", line 2, in button_immediate_install
+  File "/odoo/odoo-server/odoo/addons/base/models/ir_module.py", line 75, in check_and_log
+    return method(self, *args, **kwargs)
+  File "/odoo/odoo-server/odoo/addons/base/models/ir_module.py", line 466, in button_immediate_install
+    return self._button_immediate_function(self.env.registry[self._name].button_install)
+  File "/odoo/odoo-server/odoo/addons/base/models/ir_module.py", line 590, in _button_immediate_function
+    registry = modules.registry.Registry.new(self._cr.dbname, update_module=True)
+  File "<decorator-gen-16>", line 2, in new
+  File "/odoo/odoo-server/odoo/tools/func.py", line 87, in locked
+    return func(inst, *args, **kwargs)
+  File "/odoo/odoo-server/odoo/modules/registry.py", line 113, in new
+    odoo.modules.load_modules(registry, force_demo, status, update_module)
+  File "/odoo/odoo-server/odoo/modules/loading.py", line 480, in load_modules
+    processed_modules += load_marked_modules(env, graph,
+  File "/odoo/odoo-server/odoo/modules/loading.py", line 364, in load_marked_modules
+    loaded, processed = load_module_graph(
+  File "/odoo/odoo-server/odoo/modules/loading.py", line 227, in load_module_graph
+    load_data(env, idref, mode, kind='data', package=package)
+  File "/odoo/odoo-server/odoo/modules/loading.py", line 71, in load_data
+    tools.convert_file(env, package.name, filename, idref, mode, noupdate, kind)
+  File "/odoo/odoo-server/odoo/tools/convert.py", line 627, in convert_file
+    convert_xml_import(env, module, fp, idref, mode, noupdate)
+  File "/odoo/odoo-server/odoo/tools/convert.py", line 693, in convert_xml_import
+    obj.parse(doc.getroot())
+  File "/odoo/odoo-server/odoo/tools/convert.py", line 613, in parse
+    self._tag_root(de)
+  File "/odoo/odoo-server/odoo/tools/convert.py", line 567, in _tag_root
+    raise ParseError(msg) from None  # Restart with "--log-handler odoo.tools.convert:DEBUG" for complete traceback
+odoo.tools.convert.ParseError: while parsing /odoo/custom/addons/receta_dev/views/receta_model_views.xml:2
+Ocurrió un error al validar la vista cercana a:
+
+                    <header>
+                        <button name="next_button" string="Siguiente" type="object" class="oe_highlight" context="{'create': False}"/>
+                    </header>
+                </sheet>
+            </form>
+next_button no es una acción válida en receta.ficha
+
+View error context:
+{'file': '/odoo/custom/addons/receta_dev/views/receta_model_views.xml',
+ 'line': 9,
+ 'name': 'receta.form',
+ 'view': ir.ui.view(3844,),
+ 'view.model': 'receta.ficha',
+ 'view.parent': ir.ui.view(),
+ 'xmlid': 'view_receta_form'}
+
+
+The above server error caused the following client error:
+RPC_ERROR://odoo-pruebas.grupogino.cl/web/assets/d600f82/web.assets_web.min.js:2871:163)
+    at XMLHttpRequest.<anonymous> (https://odoo-pruebas.grupogino.cl/web/assets/d600f82/web.assets_web.min.js:2875:13)
