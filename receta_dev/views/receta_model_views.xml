@@ -1,7 +1,7 @@
 <odoo>
     <record id="view_receta_form" model="ir.ui.view">
         <field name="name">receta.form</field>
-        <field name="model">receta</field>
+        <field name="model">receta.ficha</field>
         <field name="arch" type="xml">
             <form string="Mnto Ficha Tecnica">
                 <sheet>
@@ -19,7 +19,7 @@
 
     <record id="view_receta_tree" model="ir.ui.view">
         <field name="name">receta.tree</field>
-        <field name="model">receta</field>
+        <field name="model">receta.ficha</field>
         <field name="arch" type="xml">
             <tree string="Mnto Ficha Tecnica" editable="bottom">
                 <field name="codigosec_id" widget="many2one" class="codigo-field"/>
@@ -39,7 +39,7 @@
 
     <record id="action_receta" model="ir.actions.act_window">
         <field name="name">Mnto Ficha Tecnica</field>
-        <field name="res_model">receta</field>
+        <field name="res_model">receta.ficha</field>
         <field name="view_mode">form,tree</field>
         <field name="view_id" ref="view_receta_form"/>
     </record>
