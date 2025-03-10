@@ -29,6 +29,12 @@ class RecetaFicha(models.Model):
     copiaficha = fields.Many2one('copiaficha.model', string='Copia Ficha', readonly=False)
     sequence = fields.Integer(string="Secuencia", default=10)
 
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('next', 'Next'),
+        ('done', 'Done')
+    ], string='State', default='draft')
+
     @api.depends('articulos_id', 'temporadas_id')
     def _compute_nombre_receta(self):
         for record in self:
@@ -60,6 +66,22 @@ class RecetaFicha(models.Model):
                 nombre = record.nombre_receta if record.nombre_receta else "Articulo: Sin Nombre"
                 result.append((record.id, nombre))
         return result
+    
+
+    def next_button(self):
+        self.ensure_one()
+        self.state = 'next'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'receta.ficha',
+            'view_mode': 'tree,form',
+            'target': 'current',
+            'context': {
+                'default_articulos_id': self.articulos_id.id,
+                'search_default_articulos_id': self.articulos_id.id,
+            },
+            'domain': [('articulos_id', '=', self.articulos_id.id)],
+        }
 
 
     @api.depends('cantidad_id', 'fact_perdida_id', 'c_unitario_id')
