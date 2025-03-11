@@ -8,3 +8,4 @@ access_depto_model_user,access_depto_model_user,model_depto_model,base.group_use
 access_compmanu_model_user,access_compmanu_model_user,model_compmanu_model,base.group_user,1,1,1,1
 access_copiaficha_model_user,access_copiaficha_model_user,model_copiaficha_model,base.group_user,1,1,1,1
 access_receta_ficha,access_receta_ficha,model_receta_ficha,,1,1,1,1
+access_copia_ficha,access_copia_ficha,model_copia_ficha,,1,1,1,1

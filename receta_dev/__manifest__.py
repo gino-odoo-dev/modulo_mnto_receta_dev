@@ -7,6 +7,7 @@
     'depends': ['base', 'web'],
     'data': [
         'views/receta_model_views.xml',
+        'views/copia_rec_model_views.xml',
         'security/ir.model.access.csv',
     ],
     'assets': {

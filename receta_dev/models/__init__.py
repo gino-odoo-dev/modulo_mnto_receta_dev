@@ -12,3 +12,4 @@ from . import descripcion
 from . import factperdida
 from . import temporadas
 from . import umedida
+from . import copia_ficha
