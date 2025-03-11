@@ -10,9 +10,9 @@ class RecetaFicha(models.Model):
     name = fields.Char(string='Name')
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
     articulos_id = fields.Many2one('cl.product.articulo', string='Articulos')
-
     articulo_name = fields.Char(string='Nombre de Articulo', compute='_compute_articulo_name', store=True)
     temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
+
     descripcion = fields.Text(string='Descripcion', related='componente_id.descripcion', store=False, readonly=True)
     codigosec_id = fields.Many2one('codigosec.model', string='codigo', readonly=False)
     componente_id = fields.Many2one('componente.model', string='Componente', readonly=False)
@@ -40,8 +40,8 @@ class RecetaFicha(models.Model):
         for record in self:
             articulo_nombre = record.articulos_id.name if record.articulos_id else "Sin Nombre"
             temporada_nombre = record.temporadas_id.name if record.temporadas_id else "Sin Temporada"
-            record.nombre_receta = f"Articulo: {articulo_nombre} \u00A0\u00A0\u00A0\u00A0\u00A0 Temporada: {temporada_nombre}"
-
+            record.nombre_receta = f"\u00A0\u00A0 Articulo: {articulo_nombre} \u00A0\u00A0\u00A0\u00A0\u00A0 Temporada: {temporada_nombre}"
+    
     @api.depends('temporadas_id')
     def _compute_temporada_name(self):
         for record in self:

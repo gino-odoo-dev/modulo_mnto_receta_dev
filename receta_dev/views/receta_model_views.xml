@@ -21,7 +21,7 @@
         <field name="name">receta.tree</field>
         <field name="model">receta.ficha</field>
         <field name="arch" type="xml">
-            <tree string="Mnto Ficha Tecnica" editable="bottom">
+            <tree editable="bottom" class="no-save-discard-buttons">
                 <field name="codigosec_id" widget="many2one" class="codigo-field"/>
                 <field name="componente_id" widget="many2one"/>
                 <field name="descripcion" string="Descripcion" readonly="1"/>
