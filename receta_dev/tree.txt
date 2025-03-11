@@ -4,19 +4,20 @@ receta_dev/
 │
 └── models/
     ├── __init__.py
-    └── receta.py
-    └── articulo.py
+    └── articulos.py
     └── campliado.py
     └── cantidad.py
     └── codigosec.py
     └── compmanu.py
     └── componente.py
+    └── copiaficha.py
     └── cunitario.py
     └── depto.py
     └── descripcion.py
-    └── temporadas.py
+    └── factperdida.py
+    └── receta_ficha.py
     └── umedida.py
-    └── unimedida.py
+    └── temporadas.py
 ├── views/
 │   └── receta_model_views.xml
 │
@@ -29,171 +30,3 @@ receta_dev/
 └── static/
     └── src/
         └── css/
-            └── styles.css
-
-modelo 
-
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
-
-class RecetaFicha(models.Model):
-    _name = 'receta.ficha'
-    _description = 'Receta ficha tecnica'
-    _rec_name = 'nombre_receta'
-    _order = 'sequence asc, id asc'
-
-    name = fields.Char(string='Name')
-    temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
-    articulos_id = fields.Many2one('cl.product.articulo', string='Articulos')
-    articulo_name = fields.Char(string='Nombre de Articulo', compute='_compute_articulo_name', store=True)
-    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
-
-    descripcion = fields.Text(string='Descripcion', related='componente_id.descripcion', store=False, readonly=True)
-    codigosec_id = fields.Many2one('codigosec.model', string='codigo', readonly=False)
-    componente_id = fields.Many2one('componente.model', string='Componente', readonly=False)
-    umedida = fields.Char(string='Umedida', related='componente_id.um', store=False, readonly=True)
-    depto_id = fields.Many2one('depto.model', string='Departamento', readonly=False)
-    codigodepto = fields.Char(string='Codigo Departamento', related='depto_id.codigo', store=False, readonly=True)
-    descripciondepto = fields.Text(string='Descripcion Departamento', related='depto_id.descripcion', store=False, readonly=True)
-    comp_manu_id = fields.Many2one('compmanu.model', string='CM', readonly=False)
-    fact_perdida_id = fields.Float(string='Factor de Perdida (%)', readonly=False)
-    cantidad_id = fields.Integer(string='Cantidad', readonly=False)
-    c_unitario_id = fields.Float(string='Costo Unitario', readonly=False)
-    c_ampliado_id = fields.Float(string='Costo Ampliado', compute='calcular_costo_ampliado', store=True, readonly=True, widget="integer")
-    nombre_receta = fields.Char(string='Nombre de la receta', compute='_compute_nombre_receta', store=True, readonly=True)
-    copiaficha = fields.Many2one('copiaficha.model', string='Copia Ficha', readonly=False)
-    sequence = fields.Integer(string="Secuencia", default=10)
-
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('next', 'Next'),
-        ('done', 'Done')
-    ], string='State', default='draft')
-
-    @api.depends('articulos_id', 'temporadas_id')
-    def _compute_nombre_receta(self):
-        for record in self:
-            articulo_nombre = record.articulos_id.name if record.articulos_id else "Sin Nombre"
-            temporada_nombre = record.temporadas_id.name if record.temporadas_id else "Sin Temporada"
-            record.nombre_receta = f"Articulo: {articulo_nombre} \u00A0\u00A0\u00A0\u00A0\u00A0 Temporada: {temporada_nombre}"
-    
-    @api.depends('temporadas_id')
-    def _compute_temporada_name(self):
-        for record in self:
-            record.temporada_name = getattr(record.temporadas_id, 'name', "Sin Temporada")
-
-    @api.depends('articulos_id')
-    def _compute_articulo_name(self):
-        for record in self:
-            record.articulo_name = getattr(record.articulos_id, 'name', "Sin Nombre")
-
-
-    @api.depends('componente_id')
-    def _compute_componente_name(self):
-        for record in self:
-            record.componente_name = getattr(record.componentes_id, 'codigo', "Sin Nombre")
-
-
-    def name_get(self):
-        result = []
-        for record in self:
-            if self.env.context.get('form_view'):
-                nombre = record.nombre_receta if record.nombre_receta else "Articulo: Sin Nombre"
-                result.append((record.id, nombre))
-        return result
-    
-
-    def next_button(self):
-        self.ensure_one()
-        self.state = 'next'
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'receta.ficha',
-            'view_mode': 'tree,form',
-            'target': 'current',
-            'context': {
-                'default_articulos_id': self.articulos_id.id,
-                'search_default_articulos_id': self.articulos_id.id,
-            },
-            'domain': [('articulos_id', '=', self.articulos_id.id)],
-        }
-
-
-    @api.depends('cantidad_id', 'fact_perdida_id', 'c_unitario_id')
-    def calcular_costo_ampliado(self):
-        for record in self:
-            if record.cantidad_id and record.fact_perdida_id and record.c_unitario_id:
-                if record.fact_perdida_id > 0:
-                    cantidad_perdida = (record.cantidad_id * record.fact_perdida_id) / 100
-                    record.c_ampliado_id = int(round(cantidad_perdida * record.c_unitario_id))
-                else:
-                    record.c_ampliado_id = 0
-            else:
-                record.c_ampliado_id = 0
-
-    @api.onchange('componente_id')
-    def _onchange_componente_id(self):
-        if self.componente_id:
-            self.descripcion = self.componente_id.descripcion or ''
-            self.umedida = self.componente_id.um or ''
-        else:
-            self.descripcion = ''
-            self.umedida = ''
-
-
-vista 
-
-<odoo>
-    <record id="view_receta_form" model="ir.ui.view">
-        <field name="name">receta.form</field>
-        <field name="model">receta.ficha</field>
-        <field name="arch" type="xml">
-            <form string="Mnto Ficha Tecnica">
-                <sheet>
-                    <group>
-                        <field name="temporadas_id" style="width: 30%;"/>
-                        <field name="articulos_id" style="width: 30%;"/>
-                    </group>
-                    <header>
-                        <button name="next_button" string="Siguiente" type="object" class="oe_highlight" context="{'create': False}"/>
-                    </header>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <record id="view_receta_tree" model="ir.ui.view">
-        <field name="name">receta.tree</field>
-        <field name="model">receta.ficha</field>
-        <field name="arch" type="xml">
-            <tree string="Mnto Ficha Tecnica" editable="bottom">
-                <field name="codigosec_id" widget="many2one" class="codigo-field"/>
-                <field name="componente_id" widget="many2one"/>
-                <field name="descripcion" string="Descripcion" readonly="1"/>
-                <field name="umedida" string="Umedida" readonly="1"/>
-                <field name="comp_manu_id" widget="many2one"/>
-                <field name="cantidad_id"/>
-                <field name="fact_perdida_id" widget="percentage"/>
-                <field name="c_unitario_id"/>
-                <field name="c_ampliado_id" widget="monetary"/>
-                <field name="depto_id" widget="many2one"/> 
-                <button name="unlink" string="Eliminar" type="object" icon="fa-trash" confirm="¿Estas seguro de eliminar el registro de la ficha tecnica?"/>
-            </tree>
-        </field>
-    </record>
-
-    <record id="action_receta" model="ir.actions.act_window">
-        <field name="name">Mnto Ficha Tecnica</field>
-        <field name="res_model">receta.ficha</field>
-        <field name="view_mode">form,tree</field>
-        <field name="view_id" ref="view_receta_form"/>
-    </record>
-
-    <menuitem id="menu_receta" name="Mnto Ficha Tecnica" sequence="10" groups="base.group_user"/>
-    <menuitem id="submenu_receta" name="Volver" parent="menu_receta" action="action_receta"/>
-</odoo>
-
-
-alcance 
-
-al momento de ingresar algun dato en lavista lista,  se despliegan dos botones "guardar","descartar" esos botones no deben aparecer  

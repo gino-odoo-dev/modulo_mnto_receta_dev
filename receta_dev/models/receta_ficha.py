@@ -5,7 +5,7 @@ class RecetaFicha(models.Model):
     _name = 'receta.ficha'
     _description = 'Receta ficha tecnica'
     _rec_name = 'nombre_receta'
-    _order = 'sequence asc, id asc'
+    _order = 'id asc'
 
     name = fields.Char(string='Name')
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
@@ -27,7 +27,6 @@ class RecetaFicha(models.Model):
     c_ampliado_id = fields.Float(string='Costo Ampliado', compute='calcular_costo_ampliado', store=True, readonly=True, widget="integer")
     nombre_receta = fields.Char(string='Nombre de la receta', compute='_compute_nombre_receta', store=True, readonly=True)
     copiaficha = fields.Many2one('copiaficha.model', string='Copia Ficha', readonly=False)
-    sequence = fields.Integer(string="Secuencia", default=10)
 
     state = fields.Selection([
         ('draft', 'Draft'),
