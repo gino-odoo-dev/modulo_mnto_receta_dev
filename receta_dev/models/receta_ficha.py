@@ -66,9 +66,7 @@ class RecetaFicha(models.Model):
     def name_get(self):
         result = []
         for record in self:
-            if self.env.context.get('form_view'):
-                nombre = record.nombre_receta if record.nombre_receta else "Articulo: Sin Nombre"
-                result.append((record.id, nombre))
+            result.append((record.id, record.temporada_name))
         return result
     
     def next_button(self):
