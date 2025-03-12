@@ -6,7 +6,7 @@
             <form string="Copia de Ficha Tecnica" create="0">
                 <sheet>
                     <group>
-                        <field name="temporada" style="width: 40%;" readonly="1"/>
+                        <field name="temporadas_id" style="width: 40%;"/>
                         <field name="part_o" style="width: 40%;"/>
                         <field name="m_numero_color" style="width: 40%;"/>
                         <field name="part_d" style="width: 40%;"/>

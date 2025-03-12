@@ -26,7 +26,7 @@ class RecetaFicha(models.Model):
     c_unitario_id = fields.Float(string='Costo Unitario', readonly=False)
     c_ampliado_id = fields.Float(string='Costo Ampliado', compute='calcular_costo_ampliado', store=True, readonly=True, widget="integer")
     nombre_receta = fields.Char(string='Nombre de la receta', compute='_compute_nombre_receta', store=True, readonly=True)
-    copiaficha = fields.Many2one('copiaficha.model', string='Copia Ficha', readonly=False)
+    copiaficha = fields.Many2one('copia.ficha', string='Copia Ficha', readonly=False)
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -51,12 +51,17 @@ class RecetaFicha(models.Model):
         for record in self:
             record.articulo_name = getattr(record.articulos_id, 'name', "Sin Nombre")
 
-
-    @api.depends('componente_id')
-    def _compute_componente_name(self):
+    @api.depends('cantidad_id', 'fact_perdida_id', 'c_unitario_id')
+    def calcular_costo_ampliado(self):
         for record in self:
-            record.componente_name = getattr(record.componentes_id, 'codigo', "Sin Nombre")
-
+            if record.cantidad_id and record.fact_perdida_id and record.c_unitario_id:
+                if record.fact_perdida_id > 0:
+                    cantidad_perdida = (record.cantidad_id * record.fact_perdida_id) / 100
+                    record.c_ampliado_id = int(round(cantidad_perdida * record.c_unitario_id))
+                else:
+                    record.c_ampliado_id = 0
+            else:
+                record.c_ampliado_id = 0
 
     def name_get(self):
         result = []
@@ -66,7 +71,6 @@ class RecetaFicha(models.Model):
                 result.append((record.id, nombre))
         return result
     
-
     def next_button(self):
         self.ensure_one()
         self.state = 'next'
@@ -81,19 +85,6 @@ class RecetaFicha(models.Model):
             },
             'domain': [('articulos_id', '=', self.articulos_id.id)],
         }
-
-
-    @api.depends('cantidad_id', 'fact_perdida_id', 'c_unitario_id')
-    def calcular_costo_ampliado(self):
-        for record in self:
-            if record.cantidad_id and record.fact_perdida_id and record.c_unitario_id:
-                if record.fact_perdida_id > 0:
-                    cantidad_perdida = (record.cantidad_id * record.fact_perdida_id) / 100
-                    record.c_ampliado_id = int(round(cantidad_perdida * record.c_unitario_id))
-                else:
-                    record.c_ampliado_id = 0
-            else:
-                record.c_ampliado_id = 0
 
     @api.onchange('componente_id')
     def _onchange_componente_id(self):

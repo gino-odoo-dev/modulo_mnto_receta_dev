@@ -1,4 +1,4 @@
-# Modulo Entregable Mantenimiento ficha Tecnica.
+# Modulo Entregable Mantenimiento ficha Tecnica y Copia Receta ficha Tecnica. 
 
 ## Alcance del modulo
 
