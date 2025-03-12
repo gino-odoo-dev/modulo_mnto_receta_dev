@@ -4,7 +4,7 @@
 
 Modulo receta ficha tecnica. 
 
-## Modelos 
+## Modelos Receta
 
 ### `temporadas.model`
 - Fields:
@@ -71,10 +71,36 @@ Modulo receta ficha tecnica.
 - Fields:
   - `name` (Char)
   - `decription` (Char)
+____
+_____________________________________________
+
+## Modelos Copia Receta
+
+### `copia.ficha`
+- Fields:
+  - `temporadas_id` (Char)
+  - `temporada_name` (Char)
+  - `sequence` (Char)
+  - `part_O` (Char)
+  - `part_d` (Char)
+  - `m_numero_color` (Char)
+  - `copia` (Char)
+  - `m_modelo_o` (Char)
+  - `m_modelo_d` (Char)
+  - `no_combo_o` (Char)
+  - `no_combo_d` (Char)
+  - `remplaza` (Char)
+  - `mensaje` (Char)
+  - `xcuero` (Char)
+  - `xcolor` (Char)
+  - `xplanta` (Char)
+  - `xcolfo` (Char)
+  - `temporada` (Char)
+
 _________________________________________________
 
 ### `Vista Formulario`
-### `receta.model`
+### `receta.ficha`
 - Fields:
   - `temporadas_id` (Char)
   - `articulo_id` (Integer)
@@ -82,7 +108,22 @@ _________________________________________________
 _________________________________________________
 
 ### `Vista Lista`
-### `receta.model`
+### `receta.ficha`
+- Fields:
+  - `codigosec_id` (Integer)
+  - `componente_id` (Char)
+  - `descripcion` (Text)
+  - `comp_manu` (Char)
+  - `cantidad_id` (Integer)
+  - `fact_perdida_id` (Integer)
+  - `c_unitario_id` (Float)
+  - `c_ampliado_id` (Float)
+  - `depto_id` (Char)
+
+_________________________________________________
+
+### `Vista Form Copia Lista`
+### `copia.ficha`
 - Fields:
   - `codigosec_id` (Integer)
   - `componente_id` (Char)

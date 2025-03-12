@@ -6,9 +6,8 @@ class CopiaFicha(models.Model):
     _description = 'Copia de Ficha Tecnica'
     _order = 'id asc'
 
-    temporadas_id = fields.Many2one('receta.ficha', string='Temporadas', required=True)
-    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
-
+    temporadas_id = fields.Many2one('receta.ficha', related='ficha.receta.temporada_name', string='Temporadas', required=True)
+    temporada_name = fields.Char(string='Temporada', store=True, readonly=False)
 
     sequence = fields.Integer(string="Secuencia", default=10)
     part_o = fields.Many2one('cl.product.articulo', string='Articulo Origen', required=True)
