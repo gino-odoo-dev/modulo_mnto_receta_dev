@@ -94,3 +94,15 @@ class RecetaFicha(models.Model):
         else:
             self.descripcion = ''
             self.umedida = ''
+
+#funcion actualiza los registros de maner automatica
+    @api.model
+    def create(self, vals):
+        record = super(RecetaFicha, self).create(vals)
+        record._compute_nombre_receta()
+        record._compute_temporada_name()
+        record._compute_articulo_name()
+        record.calcular_costo_ampliado()
+        record.write(vals)  
+        return record
+    
