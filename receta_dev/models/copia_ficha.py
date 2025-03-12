@@ -8,9 +8,10 @@ class CopiaFicha(models.Model):
 
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
     temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
-    sequence = fields.Integer(string="Secuencia", default=10)
-    part_o = fields.Many2one('cl.product.articulo', string='Articulo Origen', required=True)
+
+    part_o = fields.Many2one('receta.ficha', string='Articulo Origen', required=True, domain=lambda self: [('id', '=', self.env['receta.ficha'].search([], order='id desc', limit=1).id)])
     part_d = fields.Many2one('cl.product.articulo', string='Articulo Destino', required=True)
+
     m_numero_color = fields.Boolean(string="Copiar Numeraciones/Ficha Tecnica", default=True)
     copia = fields.Boolean(string="Copia")
     m_modelo_o = fields.Char(string="Modelo Origen")
@@ -23,6 +24,7 @@ class CopiaFicha(models.Model):
     xcolor = fields.Char(string="XColor", size=3)
     xplnta = fields.Char(string="XPlnta", size=3)
     xcolfo = fields.Char(string="XColfo", size=3)
+    sequence = fields.Integer(string="Secuencia", default=10)
 
     @api.depends('temporadas_id')
     def _compute_temporada_name(self):
