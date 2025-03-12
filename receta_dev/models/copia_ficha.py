@@ -6,9 +6,8 @@ class CopiaFicha(models.Model):
     _description = 'Copia de Ficha Tecnica'
     _order = 'id asc'
 
-    temporadas_id = fields.Many2one('receta.ficha', string='Temporadas', required=True)
-    temporada_name = fields.Char(string='Nombre de Temporada', store=True)
-
+    temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
+    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
     sequence = fields.Integer(string="Secuencia", default=10)
     part_o = fields.Many2one('cl.product.articulo', string='Articulo Origen', required=True)
     part_d = fields.Many2one('cl.product.articulo', string='Articulo Destino', required=True)
@@ -28,10 +27,7 @@ class CopiaFicha(models.Model):
     @api.depends('temporadas_id')
     def _compute_temporada_name(self):
         for record in self:
-            if record.temporadas_id:
-                record.temporada_name = record.temporadas_id.temporada_name
-            else:
-                record.temporada_name = "Sin Temporada"
+            record.temporada_name = getattr(record.temporadas_id, 'name', "Sin Temporada")
 
 # Validacion de Campos, se validan antes de cualquier operacion.
     @api.constrains('temporadas_id', 'part_o', 'part_d', 'm_numero_color')

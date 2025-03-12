@@ -9,9 +9,9 @@ class RecetaFicha(models.Model):
 
     name = fields.Char(string='Name')
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
+    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
     articulos_id = fields.Many2one('cl.product.articulo', string='Articulos')
     articulo_name = fields.Char(string='Nombre de Articulo', compute='_compute_articulo_name', store=True)
-    temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
 
     descripcion = fields.Text(string='Descripcion', related='componente_id.descripcion', store=False, readonly=True)
     codigosec_id = fields.Many2one('codigosec.model', string='codigo', readonly=False)
