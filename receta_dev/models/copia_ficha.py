@@ -6,8 +6,8 @@ class CopiaFicha(models.Model):
     _description = 'Copia de Ficha Tecnica'
     _order = 'id asc'
 
-    temporadas_id = fields.Many2one('receta.ficha', related='ficha.receta.temporada_name', string='Temporadas', required=True)
-    temporada_name = fields.Char(string='Temporada', store=True, readonly=False)
+    temporadas_id = fields.Many2one('receta.ficha', string='Temporadas', required=True)
+    temporada_name = fields.Char(string='Nombre de Temporada', store=True)
 
     sequence = fields.Integer(string="Secuencia", default=10)
     part_o = fields.Many2one('cl.product.articulo', string='Articulo Origen', required=True)
@@ -24,7 +24,6 @@ class CopiaFicha(models.Model):
     xcolor = fields.Char(string="XColor", size=3)
     xplnta = fields.Char(string="XPlnta", size=3)
     xcolfo = fields.Char(string="XColfo", size=3)
-    temporada = fields.Char(string="Temporada", required=False)
 
     @api.depends('temporadas_id')
     def _compute_temporada_name(self):
@@ -33,13 +32,6 @@ class CopiaFicha(models.Model):
                 record.temporada_name = record.temporadas_id.temporada_name
             else:
                 record.temporada_name = "Sin Temporada"
-
-    """ @api.model
-    def create(self, vals):
-        latest_receta = self.env['receta.ficha'].search([], order='id desc', limit=1)
-        vals['temporadas_id'] = latest_receta.id if latest_receta else False
-        vals['temporada_name'] = latest_receta.temporada_name if latest_receta else "Sin Temporada"
-        return super(CopiaFicha, self).create(vals) """
 
 # Validacion de Campos, se validan antes de cualquier operacion.
     @api.constrains('temporadas_id', 'part_o', 'part_d', 'm_numero_color')
