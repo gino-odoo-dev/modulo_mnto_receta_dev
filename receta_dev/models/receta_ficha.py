@@ -73,7 +73,24 @@ class RecetaFicha(models.Model):
     
     def next_button(self):
         self.ensure_one()
-        self.state = 'next'
+        self.write({'state': 'next'})
+        
+        # Update all fields of receta.ficha
+        self._compute_nombre_receta()
+        self._compute_temporada_name()
+        self._compute_articulo_name()
+        self.calcular_costo_ampliado()
+        
+        # Update fields of copia.ficha
+        copia_ficha = self.env['copia.ficha'].search([], limit=1)
+        if copia_ficha:
+            copia_ficha.write({
+                'part_o': self.id,
+                'part_d': self.articulos_id.id,
+                'temporadas_id': self.temporadas_id.id
+            })
+            copia_ficha._compute_temporada_name()
+        
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'receta.ficha',
@@ -103,6 +120,4 @@ class RecetaFicha(models.Model):
         record._compute_temporada_name()
         record._compute_articulo_name()
         record.calcular_costo_ampliado()
-        record.write(vals)  
         return record
-    

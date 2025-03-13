@@ -9,8 +9,10 @@ class CopiaFicha(models.Model):
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
     temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
 
-    part_o = fields.Many2one('receta.ficha', string='Articulo Origen', required=True, domain=lambda self: [('id', '=', self.env['receta.ficha'].search([], order='id desc', limit=1).id)])
-    part_d = fields.Many2one('cl.product.articulo', string='Articulo Destino', required=True)
+    part_o = fields.Many2one('receta.ficha', string='Articulo Origen', required=False, domain=lambda self: [('id', '=', self.env['receta.ficha'].search([], order='id desc', limit=1).id)])
+    nombre_receta = fields.Char(string='Nombre de Receta', compute='_compute_nombre_receta', store=True)
+
+    part_d = fields.Many2one('cl.product.articulo', string='Articulo Destino', required=False)
 
     m_numero_color = fields.Boolean(string="Copiar Numeraciones/Ficha Tecnica", default=True)
     copia = fields.Boolean(string="Copia")
@@ -26,6 +28,11 @@ class CopiaFicha(models.Model):
     xcolfo = fields.Char(string="XColfo", size=3)
     sequence = fields.Integer(string="Secuencia", default=10)
 
+    @api.depends('part_o')
+    def _compute_nombre_receta(self):
+        for record in self:
+            record.nombre_receta = record.part_o.name if record.part_o else ''
+
     @api.depends('temporadas_id')
     def _compute_temporada_name(self):
         for record in self:
@@ -38,9 +45,9 @@ class CopiaFicha(models.Model):
             if not record.temporadas_id:
                 raise ValidationError("El campo 'Temporada' es obligatorio.")
             if not record.part_o:
-                raise ValidationError("El campo 'Artículo Origen' es obligatorio.")
+                raise ValidationError("El campo 'Articulo Origen' es obligatorio.")
             if not record.m_numero_color and not record.part_d:
-                raise ValidationError("El campo 'Artículo Destino' es obligatorio cuando 'Copiar Numeraciones/Ficha Tecnica' no está marcado.")
+                raise ValidationError("El campo 'Articulo Destino' es obligatorio cuando 'Copiar Numeraciones/Ficha Tecnica' no está marcado.")
 
 
     def copia_rec_dev(self):
