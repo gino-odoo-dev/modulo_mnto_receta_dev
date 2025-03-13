@@ -8,12 +8,9 @@ class CopiaFicha(models.Model):
 
     temporadas_id = fields.Many2one('cl.product.temporada', string='Temporadas')
     temporada_name = fields.Char(string='Nombre de Temporada', compute='_compute_temporada_name', store=True)
-
     part_o = fields.Many2one('receta.ficha', string='Articulo Origen', required=False, domain=lambda self: [('id', '=', self.env['receta.ficha'].search([], order='id desc', limit=1).id)])
     nombre_receta = fields.Char(string='Nombre de Receta', compute='_compute_nombre_receta', store=True)
-
     part_d = fields.Many2one('cl.product.articulo', string='Articulo Destino', required=False)
-
     m_numero_color = fields.Boolean(string="Copiar Numeraciones/Ficha Tecnica", default=True)
     copia = fields.Boolean(string="Copia")
     m_modelo_o = fields.Char(string="Modelo Origen")
@@ -511,3 +508,30 @@ class CopiaFicha(models.Model):
 
 # Si no se encuentra un nuevo componente, devolver None.
         return None
+    
+# funcion volver button hace refresh en la aplicacion actualizando los registros en vista       
+    def eliminar_registro(self):
+        """
+        Elimina el registro actual de copia.ficha.
+        """
+        self.ensure_one() 
+        self.unlink() 
+
+    def volver_button(self):
+        """
+        Elimina el registro actual de copia.ficha y abre la vista de receta.ficha.
+        """
+        self.ensure_one()  
+        self.eliminar_registro()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'receta.ficha', 
+            'view_mode': 'tree,form', 
+            'views': [
+                (False, 'form')   
+            ],
+            'target': 'current',  
+            'context': {},  
+            'domain': [],  
+        }
+    

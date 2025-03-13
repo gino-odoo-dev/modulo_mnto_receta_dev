@@ -12,17 +12,17 @@
                         <field name="part_d" style="width: 40%;"/>
                     </group>
                     <header>
-                    <button name="copia_rec_dev" string="Iniciar Copia" type="object" class="oe_highlight"/>
-                </header>
+                        <button name="copia_rec_dev" string="Iniciar Copia" type="object" class="oe_highlight"/>
+                        <button name="volver_button" string="Volver" type="object" class="oe_highlight" confirm="¿estas seguro de que deseas eliminar este registro y volver?"/>
+                    </header>
                 </sheet>
             </form>
         </field>
     </record>
+
     <record id="action_copia_ficha" model="ir.actions.act_window">
         <field name="name">Copia de Ficha Tecnica</field>
         <field name="res_model">copia.ficha</field>
         <field name="view_mode">form</field>
     </record>
-
-    <menuitem id="menu_copia_ficha" name="Copia de Ficha Tecnica" sequence="20" parent="menu_receta" action="action_copia_ficha"/>
 </odoo>

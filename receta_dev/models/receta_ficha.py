@@ -121,3 +121,4 @@ class RecetaFicha(models.Model):
         record._compute_articulo_name()
         record.calcular_costo_ampliado()
         return record
+    
